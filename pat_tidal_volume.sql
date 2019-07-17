@@ -1,3 +1,9 @@
+# 
+# Derive the observed tidal volume for adult patients (age >= 18)
+# whose first careunit is MICU/CCU & the initial service is not surgical.
+# Tidal volumes are chosen from labevents and chartevents, and charttime in 
+# these two are matched with the chartdate in cptevent by (year, month, day)
+#
 with adult_info as 
 (
 	select p.subject_id,
