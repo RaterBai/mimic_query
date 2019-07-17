@@ -53,7 +53,7 @@ avgSpo2 as
 select adult.subject_id, 
 	   adult.hadm_id, 
 	   case 
-	   		when adult.age >= 300 then 89   -- need to be determined 
+	   		when adult.age >= 300 then 91.4   -- need to be determined 
 	   		when adult.age < 300 then adult.age 
 	   end as age,
 	   adult.gender,
