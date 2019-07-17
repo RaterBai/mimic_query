@@ -1,5 +1,6 @@
 -- create avg and first obs of chapter18
-
+drop table if exists avg_tidalvolume;
+create table avg_tidalvolume as 
 with avgTidalVolume as 
 (
 	select hadm_id, round(cast(avg(tidal_volume) as numeric), 0) AS avgTV from pat_tidal_volume
@@ -49,6 +50,11 @@ avgSpo2 as
 (
 	select hadm_id, round(cast(avg(valuenum) as numeric), 0) as avgSpo2 from all_spo2
 	group by hadm_id
+),
+avgbmi as 
+(
+	select hadm_id, round(cast(avg(bmi) as numeric), 1) as avgbmi from pat_bmi
+	group by hadm_id
 )
 select adult.subject_id, 
 	   adult.hadm_id, 
@@ -57,6 +63,9 @@ select adult.subject_id,
 	   		when adult.age < 300 then adult.age 
 	   end as age,
 	   adult.gender,
+	   adult.ethnicity,
+	   adult.admittime,
+	   f.first_careunit as location,
 	   td.avgTV,
 	   wbc.avgWBC,
 	   rr.avgRR,
@@ -65,14 +74,17 @@ select adult.subject_id,
 	   dbp.avgDiasbp,
 	   sbp.avgSysbp,
 	   mbp.avgMeanbp,
-	   sp.avgSpo2,
-	   glu.avgGlucose,
+	   --sp.avgSpo2,
+	   --glu.avgGlucose,
+	   bmi.avgbmi,
 	   adult.hospital_expire_flag
 	   from adult_info  adult
 inner join avgtidalvolume td
 on adult.hadm_id = td.hadm_id
-inner join first_icustay f
+inner join first_careunit f
 on adult.hadm_id = f.hadm_id
+--inner join first_icustay f
+--on adult.hadm_id = f.hadm_id
 left join avgWBC wbc
 on adult.hadm_id = wbc.hadm_id
 left join avgRR rr
@@ -87,11 +99,8 @@ left join avgsysbp sbp
 on adult.hadm_id = sbp.hadm_id
 left join avgmeanbp mbp
 on adult.hadm_id = mbp.hadm_id
-left join avgglucose glu
-on adult.hadm_id = glu.hadm_id
-left join avgspo2 sp
-on adult.hadm_id = sp.hadm_id;
-
+left join avgbmi bmi
+on adult.hadm_id = bmi.hadm_id;
 
 
 drop table if exists first_record;
@@ -155,15 +164,24 @@ first_Spo2 as
 	select sp.hadm_id, valuenum as Spo2 from all_spo2 sp
 	inner join (select hadm_id, min(charttime) from all_spo2 group by hadm_id) as mt_sp
 	on sp.charttime = mt_sp.min and sp.hadm_id = mt_sp.hadm_id
+),
+first_bmi as 
+(
+	select bmi.hadm_id, bmi from pat_bmi bmi
+	inner join (select hadm_id, min(charttime) from pat_bmi group by hadm_id) as mt_bmi
+	on bmi.charttime = mt_bmi.min and bmi.hadm_id = mt_bmi.hadm_id
 )
 select adult.subject_id, 
 	   adult.hadm_id, 
 	   case 
-	   		when adult.age >= 300 then 89   -- need to be determined 
+	   		when adult.age >= 300 then 91.4   -- need to be determined 
 	   		when adult.age < 300 then adult.age 
 	   end as age,
 	   adult.gender,
+	   adult.ethnicity,
+	   adult.admittime,
 	   td.tidal_volume,
+	   f.first_careunit as location,
 	   wbc.wbc,
 	   rr.rr,
 	   hr.hr,
@@ -171,13 +189,14 @@ select adult.subject_id,
 	   dbp.diasbp,
 	   sbp.sysbp,
 	   mbp.meanbp,
-	   sp.spo2,
-	   glu.glucose,
+	   bmi.bmi,
+	   --sp.spo2,
+	   --glu.glucose,
 	   adult.hospital_expire_flag
-	   from adult_info  adult
+	   from adult_info adult
 inner join first_tv td
 on adult.hadm_id = td.hadm_id
-inner join first_icustay f
+inner join first_careunit f
 on adult.hadm_id = f.hadm_id
 left join first_wbc wbc
 on adult.hadm_id = wbc.hadm_id
@@ -193,8 +212,15 @@ left join first_sysbp sbp
 on adult.hadm_id = sbp.hadm_id
 left join first_meanbp mbp
 on adult.hadm_id = mbp.hadm_id
-left join first_glucose glu
-on adult.hadm_id = glu.hadm_id
-left join first_spo2 sp
-on adult.hadm_id = sp.hadm_id;
+left join first_bmi bmi
+on adult.hadm_id = bmi.hadm_id;
 
+select count(*) from first_record;
+select count(distinct(hadm_id)) from avg_tidalvolume;
+select count(distinct(hadm_id)) from first_record;
+
+select count(distinct(pat.hadm_id)) from adult_info adult
+inner join pat_tidal_volume pat
+on pat.hadm_id = adult.hadm_id
+inner join first_careunit f
+on pat.hadm_id = f.hadm_id;
