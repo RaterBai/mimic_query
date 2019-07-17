@@ -36,7 +36,10 @@ getQ("bun.csv")
 getQ("resp_rate.csv")
 getQ_hos("hosp_los.csv")
 
-getwd()
+
+# Choose the number (x) of rows which is the minimum among all the files for each single hadm_id
+# and combine the first x rows from all the files for all the hadm_id together.
+
 tv <- read.csv("./Desktop/MIMIC-III/combine/pat_tidal_volume.csv")
 wbc <- read.csv("./Desktop/MIMIC-III/combine/wbc.csv")
 temp <- read.csv("./Desktop/MIMIC-III/combine/temp.csv")
