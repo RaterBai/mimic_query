@@ -190,8 +190,6 @@ select adult.subject_id,
 	   sbp.sysbp,
 	   mbp.meanbp,
 	   bmi.bmi,
-	   --sp.spo2,
-	   --glu.glucose,
 	   adult.hospital_expire_flag
 	   from adult_info adult
 inner join first_tv td
@@ -215,12 +213,9 @@ on adult.hadm_id = mbp.hadm_id
 left join first_bmi bmi
 on adult.hadm_id = bmi.hadm_id;
 
-select count(*) from first_record;
-select count(distinct(hadm_id)) from avg_tidalvolume;
-select count(distinct(hadm_id)) from first_record;
-
-select count(distinct(pat.hadm_id)) from adult_info adult
-inner join pat_tidal_volume pat
-on pat.hadm_id = adult.hadm_id
-inner join first_careunit f
-on pat.hadm_id = f.hadm_id;
+alter table first_record add column row_id serial;
+delete from
+	   first_record a using 
+	   first_record b where a.row_id > b.row_id and a.hadm_id = b.hadm_id;
+alter table first_record drop column row_id;
+select * from first_record;
