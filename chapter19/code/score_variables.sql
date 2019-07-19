@@ -213,6 +213,9 @@ cohort as
       , ie.intime
       , ie.outtime
       , adm.deathtime
+      , pat.gender
+      , adm.ethnicity
+      , adm.religion
       , cast(ie.intime as timestamp) - cast(adm.admittime as timestamp) as PreICULOS
       , floor( ( cast(ie.intime as date) - cast(pat.dob as date) ) / 365.242 ) as age
       , gcs.mingcs
@@ -319,7 +322,9 @@ left join comorb
 )
 select * from cohort order by subject_id, hadm_id, icustay_id;
 
-select * from score_variables s
+select count(*) from score_variables;
+
+select count(*) from score_variables s
 inner join adult_info a
-on a.hadm_id = s.hadm_id
+on a.hadm_id = s.hadm_id;
 order by a.subject_id, a.hadm_id, s.icustay_id;
