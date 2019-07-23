@@ -137,7 +137,7 @@ select hadm_id
 from first_icustay ie
 inner join admissions adm
   on ie.hadm_id = adm.hadm_id
-inner join adults_carevue_all pat
+inner join patients pat
   on ie.subject_id = pat.subject_id
   
 -- join to custom tables to get more data....
@@ -290,7 +290,7 @@ select
 from cohort
 )
 select pat.subject_id
- 	 , pat.hadm_id
+ 	 , adm.hadm_id
  	 , ie.icustay_id
 	 , age_score
 	 , hr_score
@@ -308,17 +308,16 @@ select pat.subject_id
 	 , comorbidity_score
 	 , admissiontype_score 
 	 , icu.exipre_flag as icu_expire_flag
-     , pat.dead_at_hospital_discharge as hospital_expire_flag
+     , adm.hospital_expire_flag
      , death.expire_flag as death_after_a_year from first_icustay ie
 inner join admissions adm
   on ie.hadm_id = adm.hadm_id
-inner join adults_carevue_all pat
+inner join patients pat
   on ie.subject_id = pat.subject_id
 left join icu_death icu
   on ie.icustay_id = icu.icustay_id
 left join death_after_year death
-  on death.hadm_id = pat.hadm_id
+  on death.hadm_id = adm.hadm_id
 left join scorecomp score
   on ie.icustay_id = score.icustay_id
-order by pat.subject_id, pat.hadm_id, ie.icustay_id;
-select * from SL1 where subject_id = 2040;
+order by pat.subject_id, adm.hadm_id, ie.icustay_id;

@@ -135,10 +135,12 @@ select  ie.subject_id
             then 'UnscheduledSurgical'
           else 'Medical'
         end as AdmissionType
-from first_icustay ie
+      , icu.exipre_flag as icu_expire_flag
+      , adm.hospital_expire_flag
+      , death.expire_flag as death_after_a_year from first_icustay ie
 inner join admissions adm
   on ie.hadm_id = adm.hadm_id
-inner join adults_carevue_all pat
+inner join patients pat
   on ie.subject_id = pat.subject_id
   
 -- join to custom tables to get more data....
@@ -156,9 +158,7 @@ left join labsfirstday labs
   on ie.icustay_id = labs.icustay_id
 left join pafi2 pf
   on ie.icustay_id = pf.icustay_id
-left join icu_death
-on icu_death.icustay_id = ie.icustay_id
-left join death_after_year
-on death_after_year.hadm_id = pat.hadm_id
-
-select * from SL2 where subject_id = 11007;
+left join icu_death icu
+on icu.icustay_id = ie.icustay_id
+left join death_after_year death
+on death.hadm_id = adm.hadm_id
