@@ -96,7 +96,7 @@ select  ie.subject_id
       , ie.hadm_id
       , ie.icustay_id
       , ie.intime
-
+	  , icustays.dbsource
       -- the casts ensure the result is numeric.. we could equally extract EPOCH from the interval
       -- however this code works in Oracle and Postgres
       , case 
@@ -138,6 +138,8 @@ select  ie.subject_id
       , icu.exipre_flag as icu_expire_flag
       , adm.hospital_expire_flag
       , death.expire_flag as death_after_a_year from first_icustay ie
+inner join icustays
+on ie.icustay_id = icustays.icustay_id
 inner join admissions adm
   on ie.hadm_id = adm.hadm_id
 inner join patients pat

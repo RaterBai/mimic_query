@@ -292,6 +292,7 @@ from cohort
 select pat.subject_id
  	 , adm.hadm_id
  	 , ie.icustay_id
+ 	 , icustays.dbsource
 	 , age_score
 	 , hr_score
 	 , sysbp_score
@@ -310,6 +311,8 @@ select pat.subject_id
 	 , icu.exipre_flag as icu_expire_flag
      , adm.hospital_expire_flag
      , death.expire_flag as death_after_a_year from first_icustay ie
+inner join icustays 
+  on ie.icustay_id = icustays.icustay_id
 inner join admissions adm
   on ie.hadm_id = adm.hadm_id
 inner join patients pat
