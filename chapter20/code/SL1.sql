@@ -1,5 +1,7 @@
 -- create datasets on the scores calculated 
 -- extract CPAP from the "Oxygen Delivery Device" fields
+drop table if exists SL1;
+create table SL1 as 
 with cpap as
 (
   select ie.icustay_id
@@ -213,7 +215,7 @@ select
       when bun_max is null then null
       when bun_max <  28.0 then 0
       when bun_max <  83.0 then 6
-      when bun_max >= 84.0 then 10
+      when bun_max >= 83.0 then 10  -- the webpage has a mistake here
     end as bun_score
 
   , case
@@ -319,3 +321,4 @@ left join death_after_year death
 left join scorecomp score
   on ie.icustay_id = score.icustay_id
 order by pat.subject_id, pat.hadm_id, ie.icustay_id;
+select * from SL1 where subject_id = 2040;

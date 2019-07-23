@@ -1,4 +1,6 @@
 -- create datasets on the original, untransformed varibles of SAPSII and SOFA (17variables)
+drop table if exists SL2;
+create table SL2 as 
 with cpap as
 (
   select ie.icustay_id
@@ -90,7 +92,9 @@ select hadm_id
   left join services se
     on adm.hadm_id = se.hadm_id
 )
-select ie.subject_id, ie.hadm_id, ie.icustay_id
+select  ie.subject_id
+      , ie.hadm_id
+      , ie.icustay_id
       , ie.intime
 
       -- the casts ensure the result is numeric.. we could equally extract EPOCH from the interval
@@ -131,9 +135,6 @@ select ie.subject_id, ie.hadm_id, ie.icustay_id
             then 'UnscheduledSurgical'
           else 'Medical'
         end as AdmissionType
-      , icu_death.exipre_flag as icu_expire_flag
-      , pat.dead_at_hospital_discharge as hospital_expire_flag
-      , death_after_year.expire_flag as death_after_a_year
 from first_icustay ie
 inner join admissions adm
   on ie.hadm_id = adm.hadm_id
@@ -159,3 +160,5 @@ left join icu_death
 on icu_death.icustay_id = ie.icustay_id
 left join death_after_year
 on death_after_year.hadm_id = pat.hadm_id
+
+select * from SL2 where subject_id = 11007;
