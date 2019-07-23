@@ -1,25 +1,48 @@
 -- create datasets on the original, untransformed varibles of SAPSII and SOFA (17variables)
-with pafi1 as
+with cpap as
+(
+  select ie.icustay_id
+    , min(charttime - interval '1' hour) as starttime
+    , max(charttime + interval '4' hour) as endtime
+    , max(case when lower(ce.value) similar to '%(cpap mask|bipap mask)%' then 1 else 0 end) as cpap
+  from icustays ie
+  inner join chartevents ce
+    on ie.icustay_id = ce.icustay_id
+    and ce.charttime between ie.intime and ie.intime + interval '1' day
+  where itemid in
+  (
+    -- TODO: when metavision data import fixed, check the values in 226732 match the value clause below
+    467, 469, 226732
+  )
+  and lower(ce.value) similar to '%(cpap mask|bipap mask)%'
+  -- exclude rows marked as error
+  AND ce.error IS DISTINCT FROM 1
+  group by ie.icustay_id
+), pafi1 as
 (
   -- join blood gas to ventilation durations to determine if patient was vent
+  -- also join to cpap table for the same purpose
   select bg.icustay_id, bg.charttime
   , PaO2FiO2
-  , case when vd.icustay_id is not null then 1 else 0 end as IsVent
+  , case when vd.icustay_id is not null then 1 else 0 end as vent
+  , case when cp.icustay_id is not null then 1 else 0 end as cpap
   from bloodgasfirstdayarterial bg
   left join ventdurations vd
     on bg.icustay_id = vd.icustay_id
     and bg.charttime >= vd.starttime
     and bg.charttime <= vd.endtime
-  order by bg.icustay_id, bg.charttime
-), pafi2 as
+  left join cpap cp
+    on bg.icustay_id = cp.icustay_id
+    and bg.charttime >= cp.starttime
+    and bg.charttime <= cp.endtime
+)
+, pafi2 as
 (
-  -- because pafi has an interaction between vent/PaO2:FiO2, we need two columns for the score
-  -- it can happen that the lowest unventilated PaO2/FiO2 is 68, but the lowest ventilated PaO2/FiO2 is 120
-  -- in this case, the SOFA score is 3, *not* 4.
+  -- get the minimum PaO2/FiO2 ratio *only for ventilated/cpap patients*
   select icustay_id
-  , min(case when IsVent = 0 then PaO2FiO2 else null end) as PaO2FiO2_novent_min
-  , min(case when IsVent = 1 then PaO2FiO2 else null end) as PaO2FiO2_vent_min
+  , min(PaO2FiO2) as PaO2FiO2_vent_min
   from pafi1
+  where vent = 1 or cpap = 1
   group by icustay_id
 ), comorb as
 (
@@ -97,8 +120,7 @@ select ie.subject_id, ie.hadm_id, ie.icustay_id
 	  , labs.bilirubin_max
 	  , labs.bilirubin_min
       , uo.urineoutput
-      , pf.PaO2FiO2_novent_min
-  	  , pf.PaO2FiO2_vent_min
+      , pf.PaO2FiO2_vent_min
 	  , comorb.AIDS
 	  , comorb.HEM
 	  , comorb.METS
