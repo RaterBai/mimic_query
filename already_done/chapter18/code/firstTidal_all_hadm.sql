@@ -120,14 +120,6 @@ select hadm_id, valuenum, row_number() over (partition by hadm_id order by chart
 first_meanbp as 
 (
 	select hadm_id, valuenum as meanbp from ordered_meanbp where num = 1
-),
-ordered_bmi as 
-(
-	select hadm_id, bmi, row_number() over (partition by hadm_id order by charttime) as num from pat_bmi where bmi is not null
-),
-first_bmi as 
-(
-	select hadm_id, bmi from ordered_bmi where num = 1
 )
 select adult.subject_id, 
 	   adult.hadm_id, 
@@ -168,7 +160,7 @@ left join first_sysbp sbp
 on adult.hadm_id = sbp.hadm_id
 left join first_meanbp mbp
 on adult.hadm_id = mbp.hadm_id
-left join first_bmi bmi
+left join bmi_hadm bmi
 on adult.hadm_id = bmi.hadm_id;
 
 with ordered_adm as 
@@ -180,4 +172,6 @@ with ordered_adm as
 )
 select first.* from first_tidal_volume_all_hadm first
 inner join first_adm adm
-on first.hadm_id = adm.hadm_id;
+on first.hadm_id = adm.hadm_id order by first.subject_id, first.admittime;
+
+select * from first_tidal_volume_all_hadm order by subject_id, admittime;

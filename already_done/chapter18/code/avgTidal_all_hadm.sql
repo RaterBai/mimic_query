@@ -94,11 +94,6 @@ avgMeanbp as
 (
 	select hadm_id, round(cast(avg(valuenum) as numeric), 0) as avgMeanbp from all_meanbp where valuenum is not null
 	group by hadm_id
-),
-avgbmi as 
-(
-	select hadm_id, round(cast(avg(bmi) as numeric), 1) as avgbmi from pat_bmi where bmi is not null
-	group by hadm_id
 )
 select adult.subject_id, 
 	   adult.hadm_id, 
@@ -118,7 +113,7 @@ select adult.subject_id,
 	   dbp.avgDiasbp,
 	   sbp.avgSysbp,
 	   mbp.avgMeanbp,
-	   bmi.avgbmi,
+	   bmi.bmi,
 	   adult.hospital_expire_flag
 	   from adult_info  adult
 inner join avgtidalvolume td
@@ -139,7 +134,7 @@ left join avgsysbp sbp
 on adult.hadm_id = sbp.hadm_id
 left join avgmeanbp mbp
 on adult.hadm_id = mbp.hadm_id
-left join avgbmi bmi
+left join bmi_hadm bmi
 on adult.hadm_id = bmi.hadm_id;
 
 with ordered_adm as 
@@ -151,6 +146,7 @@ with ordered_adm as
 )
 select avg.* from avg_tidal_volume_all_hadm avg
 inner join first_adm adm
-on avg.hadm_id = adm.hadm_id;
+on avg.hadm_id = adm.hadm_id
+order by avg.subject_id, avg.admittime;
 
-
+select * from avg_tidal_volume_all_hadm order by subject_id, admittime;
