@@ -2,13 +2,10 @@
 # 1: acute increase of serum creatinine >= 0.3 mg/dL
 # 2: increase at least (include) 50% within 48h
 
-install.packages("chron")
 library(chron)
 library(dplyr)
 
-data <- read.csv("./chapter25/data/creatinine.csv")
-data$charttime <- as.Date(data$charttime)
-head(data)
+data <- read.csv("./Desktop/MIMIC-III/already_done/chapter25/data/creatinine.csv")
 
 dtimes <- as.character(data$charttime)
 dtparts <- t(as.data.frame(strsplit(dtimes, ' ')))
@@ -84,3 +81,4 @@ aki_onset <- result %>% filter(AKI == 1 | AKI == 2)
 non_aki <- result %>% filter(AKI == 0)
 write.csv(aki_onset, "./Desktop/MIMIC-III/already_done/chapter25/data/AKI_cohort.csv", row.names = F, na = "")
 write.csv(non_aki$subject_id, "./Desktop/MIMIC-III/already_done/chapter25/data/non_aki_cohort.csv", row.names = F, na = "")
+nrow(non_aki)
